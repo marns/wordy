@@ -145,7 +145,8 @@ header h1 {
   margin: 10px 0;
 }
 
-#message .toast {
+#message .toast,
+#modal-message .toast {
   background: #fff;
   color: #121213;
   padding: 10px 20px;
@@ -154,52 +155,115 @@ header h1 {
   animation: fade-in 0.2s;
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Share section */
-#share-section {
+/* Challenge button */
+#challenge-btn {
   margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #3a3a3c;
-  width: 100%;
+  padding: 12px 28px;
+  background: #538d4e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#challenge-btn:hover {
+  background: #6aaf59;
+}
+
+/* Modal */
+.hidden {
+  display: none !important;
+}
+
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#modal {
+  background: #1a1a1b;
+  border: 1px solid #3a3a3c;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 420px;
+  width: 90%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
+  position: relative;
 }
 
-#share-section h3 {
-  font-size: 1rem;
+#modal h2 {
+  font-size: 1.3rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+}
+
+#modal p {
   color: #818384;
+  font-size: 0.9rem;
 }
 
-#custom-word, #share-link {
-  width: 100%;
-  max-width: 350px;
-  padding: 10px 14px;
-  border: 2px solid #3a3a3c;
-  border-radius: 4px;
-  background: #121213;
-  color: #fff;
-  font-size: 1rem;
-  text-align: center;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-#share-link {
-  letter-spacing: normal;
-  text-transform: none;
-  font-size: 0.8rem;
+#modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #818384;
+  font-size: 1.5rem;
   cursor: pointer;
+  line-height: 1;
 }
 
-#create-link {
+#modal-close:hover {
+  color: #fff;
+}
+
+#modal-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+#modal-tiles .tile {
+  width: 56px;
+  height: 56px;
+  font-size: 1.8rem;
+  cursor: text;
+}
+
+#modal-message {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#modal-create {
   padding: 10px 24px;
   background: #538d4e;
   color: #fff;
@@ -210,8 +274,39 @@ header h1 {
   cursor: pointer;
 }
 
-#create-link:hover {
+#modal-create:hover {
   background: #6aaf59;
+}
+
+#modal-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+#modal-link {
+  color: #6aaf59;
+  word-break: break-all;
+  text-align: center;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+#modal-copy {
+  padding: 8px 20px;
+  background: #818384;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#modal-copy:hover {
+  background: #9a9b9c;
 }
 
 @media (max-width: 400px) {
@@ -219,6 +314,11 @@ header h1 {
     width: 52px;
     height: 52px;
     font-size: 1.6rem;
+  }
+  #modal-tiles .tile {
+    width: 46px;
+    height: 46px;
+    font-size: 1.5rem;
   }
   .key {
     height: 50px;

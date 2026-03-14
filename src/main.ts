@@ -1,3 +1,7 @@
+/// <reference types="vite/client" />
+import answersRaw from './answers.txt?raw';
+import guessesRaw from './guesses.txt?raw';
+
 const WORD_LENGTH = 5;
 const MAX_GUESSES = 6;
 const KEYBOARD_ROWS = [
@@ -6,12 +10,11 @@ const KEYBOARD_ROWS = [
   ['Enter', 'z', 'x', 'c', 'v', 'b', 'n', 'm', '⌫'],
 ];
 
-// Random fallback words when no word is in the URL
-const FALLBACK_WORDS = [
-  'crane', 'slate', 'trace', 'crate', 'arise', 'stare', 'snare',
-  'glide', 'plumb', 'trick', 'ghost', 'flame', 'brisk', 'dwell',
-  'knack', 'shrug', 'swift', 'waltz', 'query', 'joust',
-];
+const answers = answersRaw.trim().split('\n').map((w: string) => w.trim().toLowerCase());
+const validGuesses = new Set([
+  ...answers,
+  ...guessesRaw.trim().split('\n').map((w: string) => w.trim().toLowerCase()),
+]);
 
 type TileState = 'correct' | 'present' | 'absent';
 
@@ -20,7 +23,12 @@ let currentRow = 0;
 let currentCol = 0;
 let currentGuess: string[] = [];
 let gameOver = false;
+let modalOpen = false;
 const keyStates = new Map<string, TileState>();
+
+// Modal state
+let modalWord: string[] = [];
+let modalCol = 0;
 
 function getTargetWord(): string {
   const hash = window.location.hash.slice(1);
@@ -30,7 +38,7 @@ function getTargetWord(): string {
       if (/^[a-z]{5}$/.test(decoded)) return decoded;
     } catch { /* ignore invalid base64 */ }
   }
-  return FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)];
+  return answers[Math.floor(Math.random() * answers.length)];
 }
 
 function createBoard() {
@@ -71,8 +79,20 @@ function getTiles(row: number): HTMLElement[] {
   return Array.from(rowEl.querySelectorAll('.tile'));
 }
 
+function getModalTiles(): HTMLElement[] {
+  return Array.from(document.querySelectorAll('#modal-tiles .tile'));
+}
+
 function showMessage(text: string, duration = 2000) {
   const msg = document.getElementById('message')!;
+  msg.innerHTML = `<div class="toast">${text}</div>`;
+  if (duration > 0) {
+    setTimeout(() => { msg.innerHTML = ''; }, duration);
+  }
+}
+
+function showModalMessage(text: string, duration = 2000) {
+  const msg = document.getElementById('modal-message')!;
   msg.innerHTML = `<div class="toast">${text}</div>`;
   if (duration > 0) {
     setTimeout(() => { msg.innerHTML = ''; }, duration);
@@ -96,7 +116,6 @@ function evaluateGuess(guess: string): TileState[] {
   const targetLetters = targetWord.split('');
   const guessLetters = guess.split('');
 
-  // First pass: correct positions
   for (let i = 0; i < WORD_LENGTH; i++) {
     if (guessLetters[i] === targetLetters[i]) {
       result[i] = 'correct';
@@ -105,7 +124,6 @@ function evaluateGuess(guess: string): TileState[] {
     }
   }
 
-  // Second pass: present but wrong position
   for (let i = 0; i < WORD_LENGTH; i++) {
     if (guessLetters[i] === '*') continue;
     const idx = targetLetters.indexOf(guessLetters[i]);
@@ -152,6 +170,17 @@ function submitGuess() {
   }
 
   const guess = currentGuess.join('');
+
+  if (!validGuesses.has(guess)) {
+    showMessage('Not in word list');
+    const tiles = getTiles(currentRow);
+    tiles.forEach(t => {
+      t.classList.add('shake');
+      setTimeout(() => t.classList.remove('shake'), 600);
+    });
+    return;
+  }
+
   const states = evaluateGuess(guess);
 
   revealRow(currentRow, states);
@@ -181,6 +210,11 @@ function submitGuess() {
 }
 
 function handleKey(key: string) {
+  if (modalOpen) {
+    handleModalKey(key);
+    return;
+  }
+
   if (gameOver) return;
 
   if (key === 'Enter') {
@@ -209,29 +243,112 @@ function handleKey(key: string) {
   }
 }
 
-function setupShareLink() {
-  const input = document.getElementById('custom-word') as HTMLInputElement;
-  const btn = document.getElementById('create-link')!;
-  const linkInput = document.getElementById('share-link') as HTMLInputElement;
+// --- Modal ---
 
-  btn.addEventListener('click', () => {
-    const word = input.value.toLowerCase().trim();
-    if (!/^[a-z]{5}$/.test(word)) {
-      showMessage('Enter a valid 5-letter word');
-      return;
+function createModalTiles() {
+  const container = document.getElementById('modal-tiles')!;
+  container.innerHTML = '';
+  for (let c = 0; c < WORD_LENGTH; c++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    container.appendChild(tile);
+  }
+}
+
+function openModal() {
+  modalOpen = true;
+  modalWord = [];
+  modalCol = 0;
+  createModalTiles();
+  const overlay = document.getElementById('modal-overlay')!;
+  overlay.classList.remove('hidden');
+  document.getElementById('modal-result')!.classList.add('hidden');
+  document.getElementById('modal-message')!.innerHTML = '';
+}
+
+function closeModal() {
+  modalOpen = false;
+  document.getElementById('modal-overlay')!.classList.add('hidden');
+}
+
+function handleModalKey(key: string) {
+  if (key === 'Escape') {
+    closeModal();
+    return;
+  }
+
+  if (key === 'Enter') {
+    submitModalWord();
+    return;
+  }
+
+  if (key === '⌫' || key === 'Backspace') {
+    if (modalCol > 0) {
+      modalCol--;
+      modalWord.pop();
+      const tiles = getModalTiles();
+      tiles[modalCol].textContent = '';
+      tiles[modalCol].classList.remove('filled');
     }
-    const encoded = btoa(word);
-    const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
-    linkInput.value = url;
-    linkInput.style.display = 'block';
-    navigator.clipboard.writeText(url).then(() => {
-      showMessage('Link copied to clipboard!');
-    }).catch(() => {});
-  });
+    return;
+  }
 
-  linkInput.addEventListener('click', () => {
-    linkInput.select();
-    navigator.clipboard.writeText(linkInput.value).catch(() => {});
+  const letter = key.toLowerCase();
+  if (/^[a-z]$/.test(letter) && modalCol < WORD_LENGTH) {
+    modalWord.push(letter);
+    const tiles = getModalTiles();
+    tiles[modalCol].textContent = letter;
+    tiles[modalCol].classList.add('filled');
+    modalCol++;
+  }
+}
+
+function submitModalWord() {
+  if (modalCol < WORD_LENGTH) {
+    showModalMessage('Not enough letters');
+    return;
+  }
+
+  const word = modalWord.join('');
+  if (!validGuesses.has(word)) {
+    showModalMessage('Not in word list');
+    const tiles = getModalTiles();
+    tiles.forEach(t => {
+      t.classList.add('shake');
+      setTimeout(() => t.classList.remove('shake'), 600);
+    });
+    return;
+  }
+
+  const encoded = btoa(word);
+  const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
+
+  const resultDiv = document.getElementById('modal-result')!;
+  resultDiv.classList.remove('hidden');
+
+  const link = document.getElementById('modal-link') as HTMLAnchorElement;
+  link.href = url;
+  link.textContent = url;
+
+  const copyBtn = document.getElementById('modal-copy')!;
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      showModalMessage('Copied!');
+    }).catch(() => {});
+  };
+
+  navigator.clipboard.writeText(url).then(() => {
+    showModalMessage('Link copied to clipboard!');
+  }).catch(() => {});
+}
+
+function setupModal() {
+  document.getElementById('challenge-btn')!.addEventListener('click', openModal);
+  document.getElementById('modal-close')!.addEventListener('click', closeModal);
+  document.getElementById('modal-create')!.addEventListener('click', submitModalWord);
+
+  document.getElementById('modal-overlay')!.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
   });
 }
 
@@ -239,9 +356,13 @@ function setupShareLink() {
 targetWord = getTargetWord();
 createBoard();
 createKeyboard();
-setupShareLink();
+setupModal();
 
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (modalOpen && e.key === 'Escape') {
+    closeModal();
+    return;
+  }
   handleKey(e.key);
 });

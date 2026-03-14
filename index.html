@@ -14,13 +14,24 @@
     <div id="board"></div>
     <div id="keyboard"></div>
     <div id="message"></div>
-    <div id="share-section">
-      <h3>Challenge a friend</h3>
-      <input id="custom-word" type="text" maxlength="5" placeholder="Enter a 5-letter word" />
-      <button id="create-link">Create Link</button>
-      <input id="share-link" type="text" readonly />
+    <button id="challenge-btn">Challenge a friend</button>
+  </div>
+
+  <div id="modal-overlay" class="hidden">
+    <div id="modal">
+      <button id="modal-close">&times;</button>
+      <h2>Challenge a friend</h2>
+      <p>Enter a 5-letter word</p>
+      <div id="modal-tiles" class="row"></div>
+      <div id="modal-message"></div>
+      <button id="modal-create">Create Link</button>
+      <div id="modal-result" class="hidden">
+        <a id="modal-link" href="#" target="_blank" rel="noopener"></a>
+        <button id="modal-copy">Copy Link</button>
+      </div>
     </div>
   </div>
+
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
