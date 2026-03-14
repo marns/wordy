@@ -260,9 +260,8 @@ function openModal() {
   modalWord = [];
   modalCol = 0;
   createModalTiles();
-  const overlay = document.getElementById('modal-overlay')!;
-  overlay.classList.remove('hidden');
-  document.getElementById('modal-result')!.classList.add('hidden');
+  document.getElementById('modal-overlay')!.classList.remove('hidden');
+  document.getElementById('modal-actions')!.classList.add('hidden');
   document.getElementById('modal-message')!.innerHTML = '';
 }
 
@@ -271,14 +270,51 @@ function closeModal() {
   document.getElementById('modal-overlay')!.classList.add('hidden');
 }
 
-function handleModalKey(key: string) {
-  if (key === 'Escape') {
-    closeModal();
+function updateModalActions() {
+  const actions = document.getElementById('modal-actions')!;
+  const msg = document.getElementById('modal-message')!;
+
+  if (modalCol < WORD_LENGTH) {
+    actions.classList.add('hidden');
+    msg.innerHTML = '';
     return;
   }
 
-  if (key === 'Enter') {
-    submitModalWord();
+  const word = modalWord.join('');
+  const encoded = btoa(word);
+  const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
+
+  if (!validGuesses.has(word)) {
+    msg.innerHTML = `<div class="confirm"><p>"${word}" is not in our dictionary, but you do you.</p></div>`;
+  } else {
+    msg.innerHTML = '';
+  }
+
+  actions.classList.remove('hidden');
+
+  const shareBtn = document.getElementById('modal-share')!;
+  const copyBtn = document.getElementById('modal-copy')!;
+
+  shareBtn.style.display = typeof navigator.share === 'function' ? '' : 'none';
+
+  shareBtn.onclick = () => {
+    navigator.share({
+      title: 'wordy',
+      text: "You've been challenged to play wordy! Can you guess my word?",
+      url,
+    }).catch(() => {});
+  };
+
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      showModalMessage('Copied!');
+    }).catch(() => {});
+  };
+}
+
+function handleModalKey(key: string) {
+  if (key === 'Escape') {
+    closeModal();
     return;
   }
 
@@ -289,6 +325,7 @@ function handleModalKey(key: string) {
       const tiles = getModalTiles();
       tiles[modalCol].textContent = '';
       tiles[modalCol].classList.remove('filled');
+      updateModalActions();
     }
     return;
   }
@@ -300,52 +337,13 @@ function handleModalKey(key: string) {
     tiles[modalCol].textContent = letter;
     tiles[modalCol].classList.add('filled');
     modalCol++;
+    updateModalActions();
   }
-}
-
-function submitModalWord() {
-  if (modalCol < WORD_LENGTH) {
-    showModalMessage('Not enough letters');
-    return;
-  }
-
-  const word = modalWord.join('');
-  if (!validGuesses.has(word)) {
-    showModalMessage('Not in word list');
-    const tiles = getModalTiles();
-    tiles.forEach(t => {
-      t.classList.add('shake');
-      setTimeout(() => t.classList.remove('shake'), 600);
-    });
-    return;
-  }
-
-  const encoded = btoa(word);
-  const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
-
-  const resultDiv = document.getElementById('modal-result')!;
-  resultDiv.classList.remove('hidden');
-
-  const link = document.getElementById('modal-link') as HTMLAnchorElement;
-  link.href = url;
-  link.textContent = url;
-
-  const copyBtn = document.getElementById('modal-copy')!;
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(url).then(() => {
-      showModalMessage('Copied!');
-    }).catch(() => {});
-  };
-
-  navigator.clipboard.writeText(url).then(() => {
-    showModalMessage('Link copied to clipboard!');
-  }).catch(() => {});
 }
 
 function setupModal() {
   document.getElementById('challenge-btn')!.addEventListener('click', openModal);
   document.getElementById('modal-close')!.addEventListener('click', closeModal);
-  document.getElementById('modal-create')!.addEventListener('click', submitModalWord);
 
   document.getElementById('modal-overlay')!.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
@@ -354,9 +352,11 @@ function setupModal() {
 
 // Init
 targetWord = getTargetWord();
+validGuesses.add(targetWord);
 createBoard();
 createKeyboard();
 setupModal();
+document.getElementById('challenge-btn')!.classList.remove('hidden');
 
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;

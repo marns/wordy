@@ -14,7 +14,7 @@
     <div id="board"></div>
     <div id="keyboard"></div>
     <div id="message"></div>
-    <button id="challenge-btn">Challenge a friend</button>
+    <button id="challenge-btn" class="hidden">Challenge a friend</button>
   </div>
 
   <div id="modal-overlay" class="hidden">
@@ -24,9 +24,8 @@
       <p>Enter a 5-letter word</p>
       <div id="modal-tiles" class="row"></div>
       <div id="modal-message"></div>
-      <button id="modal-create">Create Link</button>
-      <div id="modal-result" class="hidden">
-        <a id="modal-link" href="#" target="_blank" rel="noopener"></a>
+      <div id="modal-actions" class="hidden">
+        <button id="modal-share">Share</button>
         <button id="modal-copy">Copy Link</button>
       </div>
     </div>
