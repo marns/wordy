@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wordy</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>wordy</h1>
+    </header>
+    <div id="board"></div>
+    <div id="keyboard"></div>
+    <div id="message"></div>
+    <div id="share-section">
+      <h3>Challenge a friend</h3>
+      <input id="custom-word" type="text" maxlength="5" placeholder="Enter a 5-letter word" />
+      <button id="create-link">Create Link</button>
+      <input id="share-link" type="text" readonly />
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
