@@ -4,35 +4,111 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #121213;
+  --text: #fff;
+  --text-dim: #818384;
+  --border: #3a3a3c;
+  --tile-filled: #565758;
+  --correct: #538d4e;
+  --correct-hover: #6aaf59;
+  --present: #b59f3b;
+  --absent: #3a3a3c;
+  --key-bg: #818384;
+  --key-text: #fff;
+  --toast-bg: #fff;
+  --toast-text: #121213;
+  --modal-bg: #1a1a1b;
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1b;
+    --text-dim: #787c7e;
+    --border: #d3d6da;
+    --tile-filled: #878a8c;
+    --correct: #6aaa64;
+    --correct-hover: #5b9a56;
+    --present: #c9b458;
+    --absent: #9a9ea1;
+    --key-bg: #d3d6da;
+    --key-text: #1a1a1b;
+    --toast-bg: #1a1a1b;
+    --toast-text: #fff;
+    --modal-bg: #ffffff;
+    --overlay-bg: rgba(0, 0, 0, 0.4);
+  }
+}
+
 body {
-  background: #121213;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Helvetica Neue', Arial, sans-serif;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  height: 100dvh;
+}
+
+header {
+  width: 100%;
+  text-align: center;
+  padding: 8px 0;
+  position: relative;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
 }
 
 #app {
   max-width: 500px;
   width: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px;
-}
-
-header {
-  border-bottom: 1px solid #3a3a3c;
-  width: 100%;
-  text-align: center;
-  padding: 12px 0;
-  margin-bottom: 20px;
+  padding: 4px 10px;
+  min-height: 0;
 }
 
 header h1 {
-  font-size: 2rem;
+  font-size: 1.6rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
+}
+
+#challenge-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  touch-action: manipulation;
+}
+
+#challenge-btn:hover {
+  color: var(--text);
+}
+
+/* Game area: centers board vertically in remaining space */
+#game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  padding-top: 36px;
 }
 
 /* Board */
@@ -40,7 +116,6 @@ header h1 {
   display: grid;
   grid-template-rows: repeat(6, 1fr);
   gap: 5px;
-  margin-bottom: 20px;
 }
 
 .row {
@@ -49,45 +124,46 @@ header h1 {
   gap: 5px;
 }
 
+.row.shake {
+  animation: shake 0.5s ease;
+}
+
 .tile {
-  width: 62px;
-  height: 62px;
-  border: 2px solid #3a3a3c;
+  width: clamp(48px, 12vw, 62px);
+  height: clamp(48px, 12vw, 62px);
+  border: 2px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: clamp(1.4rem, 5vw, 2rem);
   font-weight: bold;
   text-transform: uppercase;
-  transition: transform 0.1s;
 }
 
 .tile.filled {
-  border-color: #565758;
-  animation: pop 0.1s ease-in-out;
+  border-color: var(--tile-filled);
 }
 
 .tile.correct {
-  background: #538d4e;
-  border-color: #538d4e;
+  background: var(--correct);
+  border-color: var(--correct);
+  color: #fff;
 }
 
 .tile.present {
-  background: #b59f3b;
-  border-color: #b59f3b;
+  background: var(--present);
+  border-color: var(--present);
+  color: #fff;
 }
 
 .tile.absent {
-  background: #3a3a3c;
-  border-color: #3a3a3c;
+  background: var(--absent);
+  border-color: var(--absent);
+  color: #fff;
 }
 
 .tile.reveal {
   animation: flip 0.5s ease forwards;
-}
-
-@keyframes pop {
-  50% { transform: scale(1.1); }
 }
 
 @keyframes flip {
@@ -96,59 +172,23 @@ header h1 {
   100% { transform: rotateX(0); }
 }
 
-/* Keyboard */
-#keyboard {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-}
-
-.kb-row {
-  display: flex;
-  gap: 6px;
-}
-
-.key {
-  height: 58px;
-  min-width: 43px;
-  padding: 0 8px;
-  border: none;
-  border-radius: 4px;
-  background: #818384;
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-transform: uppercase;
-  transition: background 0.2s;
-}
-
-.key.wide {
-  min-width: 65px;
-  font-size: 0.75rem;
-}
-
-.key.correct { background: #538d4e; }
-.key.present { background: #b59f3b; }
-.key.absent { background: #3a3a3c; }
-
-/* Message */
+/* Message — overlays above the board */
 #message {
-  min-height: 40px;
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 10px 0;
+  z-index: 10;
 }
 
 #message .toast,
 #modal-message .toast {
-  background: #fff;
-  color: #121213;
+  background: var(--toast-bg);
+  color: var(--toast-text);
   padding: 10px 20px;
   border-radius: 4px;
   font-weight: bold;
@@ -161,9 +201,60 @@ header h1 {
 }
 
 .confirm p {
-  color: #818384;
+  color: var(--text-dim);
   font-size: 0.9rem;
 }
+
+/* Keyboard */
+#keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 0 max(10px, env(safe-area-inset-bottom, 10px));
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.kb-row {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+  justify-content: center;
+}
+
+.key {
+  height: 50px;
+  flex: 1;
+  max-width: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--key-bg);
+  color: var(--key-text);
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key.wide {
+  flex: 1.5;
+  max-width: 66px;
+  font-size: 0.7rem;
+}
+
+.key.pressed { filter: brightness(0.8); }
+.key.correct { background: var(--correct); color: #fff; }
+.key.present { background: var(--present); color: #fff; }
+.key.absent { background: var(--absent); color: #fff; }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -178,25 +269,6 @@ header h1 {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Challenge button */
-#challenge-btn {
-  margin-top: 20px;
-  padding: 12px 28px;
-  background: #538d4e;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-#challenge-btn:hover {
-  background: #6aaf59;
-}
-
 /* Modal */
 .hidden {
   display: none !important;
@@ -205,7 +277,7 @@ header h1 {
 #modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,8 +285,8 @@ header h1 {
 }
 
 #modal {
-  background: #1a1a1b;
-  border: 1px solid #3a3a3c;
+  background: var(--modal-bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 30px;
   max-width: 420px;
@@ -234,7 +306,7 @@ header h1 {
 }
 
 #modal p {
-  color: #818384;
+  color: var(--text-dim);
   font-size: 0.9rem;
 }
 
@@ -244,14 +316,15 @@ header h1 {
   right: 14px;
   background: none;
   border: none;
-  color: #818384;
+  color: var(--text-dim);
   font-size: 1.5rem;
   cursor: pointer;
   line-height: 1;
+  touch-action: manipulation;
 }
 
 #modal-close:hover {
-  color: #fff;
+  color: var(--text);
 }
 
 #modal-tiles {
@@ -265,6 +338,15 @@ header h1 {
   height: 56px;
   font-size: 1.8rem;
   cursor: text;
+}
+
+#modal-input {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
 }
 
 #modal-message {
@@ -289,44 +371,35 @@ header h1 {
 
 #modal-share, #modal-copy {
   padding: 8px 20px;
-  background: #818384;
-  color: #fff;
+  min-width: 110px;
+  background: var(--key-bg);
+  color: var(--key-text);
   border: none;
   border-radius: 4px;
   font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
+  touch-action: manipulation;
+  text-align: center;
 }
 
 #modal-share {
-  background: #538d4e;
+  background: var(--correct);
+  color: #fff;
 }
 
 #modal-share:hover {
-  background: #6aaf59;
+  background: var(--correct-hover);
 }
 
 #modal-copy:hover {
-  background: #9a9b9c;
+  filter: brightness(1.1);
 }
 
 @media (max-width: 400px) {
-  .tile {
-    width: 52px;
-    height: 52px;
-    font-size: 1.6rem;
-  }
   #modal-tiles .tile {
     width: 46px;
     height: 46px;
     font-size: 1.5rem;
-  }
-  .key {
-    height: 50px;
-    min-width: 30px;
-    font-size: 0.75rem;
-  }
-  .key.wide {
-    min-width: 50px;
   }
 }
